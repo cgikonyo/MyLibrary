@@ -26,8 +26,10 @@ class BookController extends Controller
     {
         // 1. Validate
         $request->validate([
-            'description' => 'required|string|max:255',
-            'status' => 'required|in:pending,started,completed',
+            'title' => 'required|string',
+            'author' => 'nullable|string',
+            'status' => 'reequired|in:pending,started,completed',
+            'cover_ i' => 'nullable|string',
         ]);
 
         // 2. Save using the User relationship
@@ -48,14 +50,23 @@ class BookController extends Controller
         ]);
 
         // 3. Redirect back
-        return redirect()->back()->with('success', 'Book added!');
+        return redirect()->route('books.index')->with('success', 'Book added!');
     }
 
 
     //Displays details for a specific task
-    public function show(Books $books)
+    public function show($isbn)
     {
-        return view('books.show', compact('books'));
+        $response = Http::withHeaders(([
+            'User-Agent' => 'MyLibraryApp(email@example.com)'
+
+        ]))->get("https://openlibrary.org/api/books", [
+                    'bibkeys' => "ISBN:$isbn",
+                    'format' => 'json',
+                    'jscmd' => 'data',
+                ]);
+        $bookData = $response->json()["ISBN:$isbn"] ?? null;
+        return view('books.show', ['book' => $bookData]);
     }
 
     /**
@@ -77,17 +88,24 @@ class BookController extends Controller
         return redirect()->back()->with('success', 'List updated!');
     }
 
-    public function show($isbn)
+    public function search(Request $request)
     {
-        $response = Http::withHeaders(([
-            'User-Agent' => 'MyLibraryApp(email@example.com)'
+        $query = $request->input('query');
+        $results = [];
 
-        ]))->get("https://openlibrary.org/api/books?bibkeys=ISBN:$isbn&format=json&jscmd=data", [
-                    'bibkeys' => "ISBN:$isbn",
-                    'format' => 'json',
-                    'jscmd' => 'data',
-                ]);
-        $bookData = $response->json()["ISBN:$isbn"] ?? null;
-        return view('books.show', ['book' => $bookData]);
+        if ($query) {
+            $response = http::withHeaders([
+                'User-Agent' => 'MyLibraryApp (email@example.com)'
+            ])->get("https://openlibrary.org", [
+                        // 'q' => $query,
+                        'limit' => 10,
+                        'fields' => 'key,title,author_name,cover_i'
+                    ]);
+
+            $results = $response->json()['docs'] ?? [];
+        }
+        return view('books.search', compact('results'));
     }
+
+
 }
