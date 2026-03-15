@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Books;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class BookController extends Controller
 {
@@ -74,5 +75,19 @@ class BookController extends Controller
         $books->update(['status' => $request->status]);
 
         return redirect()->back()->with('success', 'List updated!');
+    }
+
+    public function show($isbn)
+    {
+        $response = Http::withHeaders(([
+            'User-Agent' => 'MyLibraryApp(email@example.com)'
+
+        ]))->get("https://openlibrary.org/api/books?bibkeys=ISBN:$isbn&format=json&jscmd=data", [
+                    'bibkeys' => "ISBN:$isbn",
+                    'format' => 'json',
+                    'jscmd' => 'data',
+                ]);
+        $bookData = $response->json()["ISBN:$isbn"] ?? null;
+        return view('books.show', ['book' => $bookData]);
     }
 }
