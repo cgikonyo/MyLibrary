@@ -1,29 +1,27 @@
 <?php
 
-
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-// all book routes should be protected by authentication
-Route::middleware(['auth'])->group(function () {
+// Authenticated routes (books CRUD, search, logout)
+Route::middleware('auth')->group(function () {
     Route::resource('books', BookController::class);
+    Route::get('/search', [BookController::class, 'search'])->name('books.search');
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-// optionally serve a simple homepage - could redirect to books
+// Guest routes (login & register)
+Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('login', [AuthController::class, 'login']);
+
+Route::get('register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('register', [AuthController::class, 'register']);
+
+// Homepage redirect
 Route::get('/', function () {
-    return redirect()->route('books.index');
+    if (auth()->check()) {
+        return redirect()->route('books.index');
+    }
+    return redirect()->route('login');
 });
-
-
-
-// authentication routes (only available to guests)
-Route::middleware('guest')->group(function () {
-    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('login', [AuthController::class, 'login']);
-    Route::get('register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('register', [AuthController::class, 'register']);
-});
-
-// logout should be available to authenticated users
-Route::post('logout', [AuthController::class, 'logout'])->name('logout');

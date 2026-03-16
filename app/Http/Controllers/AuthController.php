@@ -11,6 +11,9 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
+        if (Auth::check()) {
+            return redirect()->route('books.index'); // already logged in
+        }
         return view('login');
     }
 
@@ -33,6 +36,9 @@ class AuthController extends Controller
 
     public function showRegister()
     {
+        if (Auth::check()) {
+            return redirect()->route('books.index'); // already logged in
+        }
         return view('register');
     }
 
