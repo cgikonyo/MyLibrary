@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Books;
+use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -16,7 +16,7 @@ class BookController extends Controller
 
     public function create()
     {
-        return view('books.create');
+        return view('book.create');
     }
 
     public function store(Request $request)
@@ -28,17 +28,11 @@ class BookController extends Controller
             'cover_i' => 'nullable|string',
         ]);
 
-        $user = auth()->user();
-
-        // Logic to get the next number in the user's personal list
-        $nextBookNumber = ($user->books()->max('book_number') ?? 0) + 1;
-
-        $user->books()->create([
+        auth()->user()->books()->create([
             'title' => $request->title,
             'author' => $request->author,
             'status' => $request->status,
-            'cover_i' => $request->cover_i, // Now saving the cover ID
-            'book_number' => $nextBookNumber,
+            'cover_i' => $request->cover_i,
         ]);
 
         return redirect()->route('books.index')->with('success', 'Book added to your library!');
@@ -46,7 +40,6 @@ class BookController extends Controller
 
     public function show($isbn)
     {
-        // FIXED: Endpoint URL updated to include /api/books
         $response = Http::withoutVerifying()
             ->withHeaders([
                 'User-Agent' => 'MyLibraryApp (email@example.com)'
@@ -57,12 +50,12 @@ class BookController extends Controller
                 ]);
 
         $bookData = $response->json()["ISBN:$isbn"] ?? null;
-        return view('books.show', ['book' => $bookData]);
+        return view('book.show', ['book' => $bookData]);
     }
 
-    public function update(Request $request, Books $books)
+    public function update(Request $request, Book $book)
     {
-        if ($books->user_id !== auth()->id()) {
+        if ($book->user_id !== auth()->id()) {
             abort(403);
         }
 
@@ -70,7 +63,9 @@ class BookController extends Controller
             'status' => 'required|in:pending,started,completed',
         ]);
 
-        $books->update(['status' => $request->status]);
+        $book->update([
+            'status' => $request->status
+        ]);
 
         return redirect()->back()->with('success', 'Status updated!');
     }
@@ -81,7 +76,6 @@ class BookController extends Controller
         $results = [];
 
         if ($query) {
-            // FIXED: Endpoint URL updated to include /search.json
             $response = Http::withoutVerifying()
                 ->withHeaders([
                     'User-Agent' => 'MyLibraryApp (email@example.com)'
@@ -96,4 +90,30 @@ class BookController extends Controller
 
         return view('books.search', compact('results'));
     }
+
+    public function destroy(Book $book)
+    {
+        if ($book->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $book->delete();
+
+        return redirect()->route('books.index')
+            ->with('success', 'Book deleted successfully!');
+    }
+
+    public function updateStatus(Request $request, Book $book)
+    {
+
+        $request->validate([
+            'status' => 'required|in:pending,started,completed'
+        ]);
+        $book->status = $request->status;
+        $book->save();
+
+        return back();
+    }
+
+
 }

@@ -53,6 +53,6 @@ class User extends Authenticatable
     public function books()
     {
         // use proper class name casing and ensure the model is imported
-        return $this->hasMany(Books::class);
+        return $this->hasMany(Book::class);
     }
 }

@@ -6,8 +6,8 @@
     <form action="{{ route('books.store') }}" method="POST">
         @csrf
         <div class="mb-3">
-            <label for="description" class="form-label">Book Title</label>
-            <input type="text" name="description" id="description" class="form-control" required>
+            <label for="title" class="form-label">Book Title</label>
+            <input type="text" name="title" id="title" class="form-control" required>
         </div>
         <div class="mb-3">
             <label for="status" class="form-label">Status</label>

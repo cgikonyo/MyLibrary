@@ -37,6 +37,14 @@
                         <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Login</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ route('register') }}">Register</a></li>
                     @endauth
+                    <li class="nav-item">
+                        <form method="GET" action="{{ route('books.search') }}">
+                            @csrf
+                            <button class="btn btn-link nav-link" type="submit">Add Book</button>
+                        </form>
+
+
+                    </li>
                 </ul>
             </div>
         </div>
