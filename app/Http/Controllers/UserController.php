@@ -43,7 +43,7 @@ class UserController extends Controller
     //show edit form
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        return view('profile.edit');
     }
 
     //update user data
@@ -59,10 +59,5 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User updated successfully!');
     }
 
-    //delete user
-    public function destroy(User $user)
-    {
-        $user->delete();
-        return redirect()->route('users.index')->with('success', 'User deleted successfully!');
-    }
+
 }

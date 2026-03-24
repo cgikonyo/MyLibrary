@@ -34,3 +34,10 @@ Route::delete('/users{user}', [UserController::class, 'destroy'])->name('users.d
 
 //Delete Books
 Route::resource('books', BookController::class);
+
+//updating user profiles
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [UserController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [UserController::class, 'update'])->name('profile.update');
+});
+
