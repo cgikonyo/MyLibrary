@@ -11,7 +11,42 @@ class BookController extends Controller
     public function index()
     {
         $books = auth()->user()->books;
-        return view('books.index', compact('books'));
+        $recommendations = [];
+
+        if ($books->isNotEmpty()) {
+            // Pick a random book from user's list
+            $randomBook = $books->random();
+
+            // Use title or author to fetch similar books
+            $query = $randomBook->author ?? $randomBook->title;
+
+            $response = Http::withoutVerifying()
+                ->withHeaders([
+                    'User-Agent' => 'MyLibraryApp (email@example.com)'
+                ])
+                ->get("https://openlibrary.org/search.json", [
+                    'q' => $query,
+                    'limit' => 6,
+                    'fields' => 'title,author_name,cover_i'
+                ]);
+
+            $recommendations = $response->json()['docs'] ?? [];
+        } else {
+            // Fallback: random popular books
+            $response = Http::withoutVerifying()
+                ->withHeaders([
+                    'User-Agent' => 'MyLibraryApp (email@example.com)'
+                ])
+                ->get("https://openlibrary.org/search.json", [
+                    'q' => 'bestsellers',
+                    'limit' => 6,
+                    'fields' => 'title,author_name,cover_i'
+                ]);
+
+            $recommendations = $response->json()['docs'] ?? [];
+        }
+
+        return view('books.index', compact('books', 'recommendations'));
     }
 
     public function create()
